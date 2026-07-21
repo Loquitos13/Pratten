@@ -1,0 +1,1 @@
+ C:\\Users\\loquitos13\\Desktop\\Beringela\\pratten\\front\\build\\32c7a6a794db5085d2409bf2a4338619\\dart_build_result.json: 

@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: pratten
+  profiles:
+    # Local development runs on an in-memory H2 (PostgreSQL compatibility mode)
+    # so the API boots with zero external infrastructure. Use the "prod" profile
+    # for a real PostgreSQL instance.
+    default: dev
+  jpa:
+    # Kept enabled for this initial phase so controller-side DTO mapping can
+    # traverse lazy associations. Revisit (e.g. fetch joins / DTO projections)
+    # before scaling read traffic.
+    open-in-view: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+pratten:
+  seed:
+    enabled: true
+  security:
+    jwt:
+      # Override in production via PRATTEN_JWT_SECRET (min. 32 bytes for HS256).
+      secret: ${PRATTEN_JWT_SECRET:pratten-dev-secret-change-me-please-0123456789abcdef}
+      expiration-minutes: 480
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:h2:mem:pratten;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  flyway:
+    enabled: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/pratten}
+    username: ${DB_USERNAME:pratten}
+    password: ${DB_PASSWORD:pratten}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+pratten:
+  seed:
+    enabled: false
