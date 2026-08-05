@@ -26,6 +26,10 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+          cache-dependency-path: back/pom.xml
+
+      - name: Make mvnw executable
+        run: chmod +x mvnw
 
       - name: Run tests
-        run: mvn test -B
+        run: ./mvnw test -B
