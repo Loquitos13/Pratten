@@ -1,12 +1,17 @@
 package beringela.software.service;
 
+import beringela.software.common.NotFoundException;
 import beringela.software.domain.Order;
 import beringela.software.domain.OrderItem;
 import beringela.software.domain.OrderItemStatus;
 import beringela.software.domain.OrderStatus;
+import beringela.software.domain.StaffMember;
 import beringela.software.dto.ReportDtos.SalesReport;
+import beringela.software.dto.ReportDtos.StaffActivityReport;
+import beringela.software.dto.ReportDtos.StaffOrderActivity;
 import beringela.software.dto.ReportDtos.WaiterReport;
 import beringela.software.repository.OrderRepository;
+import beringela.software.repository.StaffMemberRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -26,9 +31,11 @@ public class ReportService {
     private static final UUID UNASSIGNED = new UUID(0L, 0L);
 
     private final OrderRepository orderRepository;
+    private final StaffMemberRepository staffRepository;
 
-    public ReportService(OrderRepository orderRepository) {
+    public ReportService(OrderRepository orderRepository, StaffMemberRepository staffRepository) {
         this.orderRepository = orderRepository;
+        this.staffRepository = staffRepository;
     }
 
     public SalesReport waiterSales(Instant from, Instant to) {
@@ -57,6 +64,43 @@ public class ReportService {
 
         return new SalesReport(from, to, orders.size(), totalSales, totalTips,
                 totalSales.add(totalTips), waiters);
+    }
+
+    public StaffActivityReport staffActivity(UUID staffId, Instant from, Instant to) {
+        StaffMember staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> NotFoundException.of("StaffMember", staffId));
+
+        List<Order> orders = orderRepository
+                .findByWaiterIdAndCreatedAtBetweenOrderByCreatedAtDesc(staffId, from, to)
+                .stream()
+                .filter(o -> o.getStatus() != OrderStatus.CANCELLED)
+                .toList();
+
+        BigDecimal sales = BigDecimal.ZERO;
+        BigDecimal tips = BigDecimal.ZERO;
+        List<StaffOrderActivity> activities = new ArrayList<>();
+
+        for (Order order : orders) {
+            sales = sales.add(order.getTotal());
+            tips = tips.add(order.getTip());
+            long items = order.getItems().stream()
+                    .filter(i -> i.getStatus() != OrderItemStatus.CANCELLED)
+                    .mapToInt(i -> i.getQuantity())
+                    .sum();
+            activities.add(new StaffOrderActivity(
+                    order.getId(),
+                    order.getTable() != null ? order.getTable().getNumber() : null,
+                    order.getStatus(),
+                    order.getTotal(),
+                    order.getTip(),
+                    order.getPaidAmount(),
+                    items,
+                    order.getCreatedAt()));
+        }
+
+        return new StaffActivityReport(
+                staff.getId(), staff.getName(), from, to,
+                orders.size(), sales, tips, activities);
     }
 
     private static final class Accumulator {

@@ -1,5 +1,6 @@
 package beringela.software.web;
 
+import beringela.software.domain.StaffRole;
 import beringela.software.dto.StaffDtos.StaffRequest;
 import beringela.software.dto.StaffDtos.StaffResponse;
 import beringela.software.service.StaffService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,8 +30,9 @@ public class StaffController {
     }
 
     @GetMapping
-    public List<StaffResponse> list() {
-        return staffService.findAll().stream().map(StaffResponse::from).toList();
+    public List<StaffResponse> list(@RequestParam(name = "role", required = false) StaffRole role) {
+        var members = role != null ? staffService.findByRole(role) : staffService.findAll();
+        return members.stream().map(StaffResponse::from).toList();
     }
 
     @GetMapping("/{id}")

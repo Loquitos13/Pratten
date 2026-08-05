@@ -6,6 +6,7 @@ import beringela.software.domain.OrderItemStatus;
 import beringela.software.dto.OrderDtos.KitchenTicketResponse;
 import beringela.software.dto.OrderDtos.OrderResponse;
 import beringela.software.repository.OrderItemRepository;
+import beringela.software.security.StaffActionGuard;
 import beringela.software.sync.SyncEventType;
 import beringela.software.sync.SyncService;
 import java.util.List;
@@ -23,18 +24,23 @@ public class KitchenService {
 
     private final OrderItemRepository orderItemRepository;
     private final SyncService syncService;
+    private final StaffActionGuard staffActionGuard;
 
-    public KitchenService(OrderItemRepository orderItemRepository, SyncService syncService) {
+    public KitchenService(OrderItemRepository orderItemRepository, SyncService syncService,
+            StaffActionGuard staffActionGuard) {
         this.orderItemRepository = orderItemRepository;
         this.syncService = syncService;
+        this.staffActionGuard = staffActionGuard;
     }
 
     @Transactional(readOnly = true)
     public List<OrderItem> queue() {
+        staffActionGuard.assertKitchenOnShift();
         return orderItemRepository.findByStatusInOrderByCreatedAtAsc(QUEUE_STATUSES);
     }
 
     public OrderItem updateStatus(UUID itemId, OrderItemStatus status) {
+        staffActionGuard.assertKitchenOperator();
         OrderItem item = orderItemRepository.findById(itemId)
                 .orElseThrow(() -> NotFoundException.of("OrderItem", itemId));
         item.setStatus(status);

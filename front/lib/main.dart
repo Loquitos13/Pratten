@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 
+import 'config.dart';
+
 void main() {
-  runApp(MyApp());
+  runApp(const PrattenApp());
 }
 
-class MyApp extends StatelessWidget {
+class PrattenApp extends StatelessWidget {
+  const PrattenApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Multi-Platform App',
+      title: 'Pratten',
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: AppBar(
-          title: Text('Hello, Flutter!'),
-        ),
+        appBar: AppBar(title: const Text('Pratten')),
         body: Center(
-          child: Text('Welcome to Flutter!'),
+          child: Text('Frontend em preparação\n${AppConfig.apiBaseUrl}'),
         ),
       ),
     );

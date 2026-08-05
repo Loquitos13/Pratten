@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pratten-postgres
+    environment:
+      POSTGRES_DB: pratten
+      POSTGRES_USER: pratten
+      POSTGRES_PASSWORD: pratten
+    ports:
+      - "5433:5432"
+    volumes:
+      - pratten_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pratten -d pratten"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: pratten-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: pratten
+      RABBITMQ_DEFAULT_PASS: pratten
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: pratten-redis
+    command: redis-server --requirepass pratten
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "pratten", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pratten_pg_data:

@@ -1,5 +1,6 @@
 package beringela.software.dto;
 
+import beringela.software.domain.OrderStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -20,6 +21,29 @@ public final class ReportDtos {
             BigDecimal salesTotal,
             BigDecimal tipsTotal,
             BigDecimal grandTotal) {
+    }
+
+    /** Detalhe de um pedido/fatura atribuído a um empregado. */
+    public record StaffOrderActivity(
+            UUID orderId,
+            String tableNumber,
+            OrderStatus status,
+            BigDecimal total,
+            BigDecimal tip,
+            BigDecimal paidAmount,
+            long itemsCount,
+            Instant createdAt) {
+    }
+
+    public record StaffActivityReport(
+            UUID staffId,
+            String staffName,
+            Instant from,
+            Instant to,
+            long ordersCount,
+            BigDecimal salesTotal,
+            BigDecimal tipsTotal,
+            List<StaffOrderActivity> orders) {
     }
 
     public record SalesReport(

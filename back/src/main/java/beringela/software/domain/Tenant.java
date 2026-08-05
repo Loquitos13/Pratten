@@ -31,4 +31,8 @@ public class Tenant extends BaseEntity {
 
     @Column(nullable = false)
     private boolean active = true;
+
+    /** Notas internas visíveis apenas ao superadmin (suporte). */
+    @Column(name = "support_notes", length = 2000)
+    private String supportNotes;
 }

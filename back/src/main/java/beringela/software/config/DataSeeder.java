@@ -1,7 +1,9 @@
 package beringela.software.config;
 
+import beringela.software.domain.PlatformAdmin;
 import beringela.software.domain.Category;
 import beringela.software.domain.MenuItem;
+import beringela.software.domain.MenuItemIngredient;
 import beringela.software.domain.Product;
 import beringela.software.domain.ProductUnit;
 import beringela.software.domain.Reservation;
@@ -12,8 +14,10 @@ import beringela.software.domain.StaffMember;
 import beringela.software.domain.StaffRole;
 import beringela.software.domain.TableStatus;
 import beringela.software.domain.Tenant;
+import beringela.software.repository.PlatformAdminRepository;
 import beringela.software.repository.CategoryRepository;
 import beringela.software.repository.MenuItemRepository;
+import beringela.software.repository.MenuItemIngredientRepository;
 import beringela.software.repository.ProductRepository;
 import beringela.software.repository.ReservationRepository;
 import beringela.software.repository.RestaurantTableRepository;
@@ -43,10 +47,30 @@ public class DataSeeder {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
     private static final String DEMO_SLUG = "demo";
     private static final String DEMO_PASSWORD = "demo1234";
+    private static final String SUPERADMIN_EMAIL = "superadmin@pratten.pt";
+    private static final String SUPERADMIN_PASSWORD = "superadmin1234";
+
+    @Bean
+    ApplicationRunner seedPlatformAdmin(PlatformAdminRepository admins,
+            PasswordEncoder passwordEncoder) {
+        return args -> {
+            if (admins.findByEmailIgnoreCase(SUPERADMIN_EMAIL).isPresent()) {
+                return;
+            }
+            PlatformAdmin admin = new PlatformAdmin();
+            admin.setName("Super Admin");
+            admin.setEmail(SUPERADMIN_EMAIL);
+            admin.setPasswordHash(passwordEncoder.encode(SUPERADMIN_PASSWORD));
+            admins.save(admin);
+            log.info("Platform superadmin: {} (POST /platform/auth/login, password '{}')",
+                    SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD);
+        };
+    }
 
     @Bean
     ApplicationRunner seedDemoData(TenantRepository tenants, CategoryRepository categories,
             ProductRepository products, MenuItemRepository menuItems,
+            MenuItemIngredientRepository ingredients,
             RestaurantTableRepository tables, StaffMemberRepository staff,
             ReservationRepository reservations, TransactionTemplate tx,
             PasswordEncoder passwordEncoder) {
@@ -58,7 +82,8 @@ public class DataSeeder {
             TenantContext.set(tenant.getId());
             try {
                 tx.executeWithoutResult(status ->
-                        seed(categories, products, menuItems, tables, staff, reservations, passwordEncoder));
+                        seed(categories, products, menuItems, ingredients, tables, staff, reservations,
+                                passwordEncoder));
             } finally {
                 TenantContext.clear();
             }
@@ -79,24 +104,27 @@ public class DataSeeder {
     }
 
     private void seed(CategoryRepository categories, ProductRepository products,
-            MenuItemRepository menuItems, RestaurantTableRepository tables,
-            StaffMemberRepository staff, ReservationRepository reservations,
-            PasswordEncoder passwordEncoder) {
+            MenuItemRepository menuItems, MenuItemIngredientRepository ingredients,
+            RestaurantTableRepository tables, StaffMemberRepository staff,
+            ReservationRepository reservations, PasswordEncoder passwordEncoder) {
         Category peixe = categories.save(category("Peixe", 1));
         Category carnes = categories.save(category("Carnes", 2));
         Category bebidas = categories.save(category("Bebidas", 3));
         Category lacticinios = categories.save(category("Lacticínios", 4));
         Category condimentos = categories.save(category("Condimentos", 5));
 
-        products.save(product("Bacalhau Fresco", "5601234567890", peixe, ProductUnit.KG, 3, 10, "12.50"));
-        products.save(product("Azeite Extra Virgem", "5601234567891", condimentos, ProductUnit.LITER, 2, 5, "8.90"));
+        Product bacalhau = products.save(product("Bacalhau Fresco", "5601234567890", peixe, ProductUnit.KG, 3, 10, "12.50"));
+        Product azeite = products.save(product("Azeite Extra Virgem", "5601234567891", condimentos, ProductUnit.LITER, 2, 5, "8.90"));
         products.save(product("Vinho Tinto Douro", "5601234567892", bebidas, ProductUnit.BOTTLE, 4, 12, "15.00"));
         products.save(product("Queijo Serra Estrela", "5601234567893", lacticinios, ProductUnit.UNIT, 1, 6, "9.50"));
 
-        menuItems.save(menuItem("Bacalhau à Brás", peixe, "12.00"));
+        MenuItem bacalhauBras = menuItems.save(menuItem("Bacalhau à Brás", peixe, "12.00"));
         menuItems.save(menuItem("Francesinha", carnes, "12.00"));
         menuItems.save(menuItem("Polvo à Lagareiro", peixe, "20.00"));
         menuItems.save(menuItem("Arroz de Marisco", peixe, "15.00"));
+
+        ingredients.save(recipeLine(bacalhauBras, bacalhau, "0.250"));
+        ingredients.save(recipeLine(bacalhauBras, azeite, "0.050"));
 
         // One manager (OWNER) per tenant; the manager assigns the waiter to the
         // tables he is responsible for.
@@ -146,6 +174,14 @@ public class DataSeeder {
         m.setCategory(category);
         m.setPrice(new BigDecimal(price));
         return m;
+    }
+
+    private MenuItemIngredient recipeLine(MenuItem menuItem, Product product, String quantity) {
+        MenuItemIngredient line = new MenuItemIngredient();
+        line.setMenuItem(menuItem);
+        line.setProduct(product);
+        line.setQuantityPerServing(new BigDecimal(quantity));
+        return line;
     }
 
     private RestaurantTable table(String number, String zone, int seats, StaffMember assignedWaiter) {

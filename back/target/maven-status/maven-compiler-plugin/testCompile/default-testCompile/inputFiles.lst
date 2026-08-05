@@ -1,1 +1,16 @@
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\common\PrattenJsonTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\integration\IntegrationTestFixtures.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\integration\PlatformStockAlertIntegrationTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\integration\RabbitPlatformEventIntegrationTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\integration\RedisLoginAttemptStoreIntegrationTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\integration\RedisSyncPubSubIntegrationTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\migration\FlywayMigrationFilesTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\migration\FlywayMigrationIntegrationTest.java
 C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\PrattenApplicationTests.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\security\LoginAttemptServiceTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\service\StockServiceTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\web\PlatformAuthWebTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\web\PrincipalRevalidationWebTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\web\RemoteSessionWebTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\web\RoleAccessWebTest.java
+C:\Users\loquitos13\Desktop\Beringela\pratten\back\src\test\java\beringela\software\web\ShiftGateWebTest.java

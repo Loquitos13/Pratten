@@ -1,0 +1,10 @@
+{
+  "name": "Restaurante Novo",
+  "slug": "novo-rest",
+  "vatNumber": "500000001",
+  "address": "Av. Teste, Porto",
+  "currency": "EUR",
+  "ownerName": "Owner Novo",
+  "ownerEmail": "owner@novo-rest.pt",
+  "ownerPassword": "owner12345"
+}

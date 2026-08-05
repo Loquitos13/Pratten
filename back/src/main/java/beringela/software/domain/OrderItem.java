@@ -43,7 +43,7 @@ public class OrderItem extends TenantScopedEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderItemStatus status = OrderItemStatus.PENDING;
+    private OrderItemStatus status = OrderItemStatus.DRAFT;
 
     public BigDecimal getLineTotal() {
         return unitPrice.multiply(BigDecimal.valueOf(quantity));

@@ -1,0 +1,8 @@
+{
+  "customerName": "Cliente Postman",
+  "customerEmail": "cliente@exemplo.pt",
+  "customerPhone": "+351912345678",
+  "partySize": 4,
+  "reservedAt": "2026-08-10T20:00:00Z",
+  "notes": "Mesa perto da janela"
+}

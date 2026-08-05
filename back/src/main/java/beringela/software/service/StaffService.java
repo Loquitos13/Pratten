@@ -2,6 +2,7 @@ package beringela.software.service;
 
 import beringela.software.common.NotFoundException;
 import beringela.software.domain.StaffMember;
+import beringela.software.domain.StaffRole;
 import beringela.software.dto.StaffDtos.StaffRequest;
 import beringela.software.repository.StaffMemberRepository;
 import java.util.List;
@@ -26,6 +27,11 @@ public class StaffService {
     @Transactional(readOnly = true)
     public List<StaffMember> findAll() {
         return repository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<StaffMember> findByRole(StaffRole role) {
+        return repository.findByRoleAndActiveTrueOrderByNameAsc(role);
     }
 
     @Transactional(readOnly = true)

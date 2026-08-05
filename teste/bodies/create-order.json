@@ -1,0 +1,5 @@
+{
+  "tableId": "{{tableId}}",
+  "waiterId": "{{waiterId}}",
+  "notes": "Pedido via Postman"
+}

@@ -1,0 +1,43 @@
+spring:
+  config:
+    activate:
+      on-profile: it
+  datasource:
+    url: jdbc:h2:mem:pratten-it;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  flyway:
+    enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+
+pratten:
+  seed:
+    enabled: false
+  platform:
+    bootstrap:
+      enabled: false
+  messaging:
+    rabbit:
+      enabled: false
+  redis:
+    enabled: false
+
+management:
+  health:
+    rabbit:
+      enabled: false
+    redis:
+      enabled: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

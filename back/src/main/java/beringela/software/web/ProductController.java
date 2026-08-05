@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -30,32 +31,38 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER','WAITER')")
     public List<ProductResponse> list() {
         return catalogService.findProducts().stream().map(ProductResponse::from).toList();
     }
 
     @GetMapping("/low-stock")
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER','WAITER')")
     public List<ProductResponse> lowStock() {
         return catalogService.findLowStock().stream().map(ProductResponse::from).toList();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER','WAITER')")
     public ProductResponse get(@PathVariable UUID id) {
         return ProductResponse.from(catalogService.getProduct(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER')")
     public ProductResponse create(@Valid @RequestBody ProductRequest request) {
         return ProductResponse.from(catalogService.createProduct(request));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER')")
     public ProductResponse update(@PathVariable UUID id, @Valid @RequestBody ProductRequest request) {
         return ProductResponse.from(catalogService.updateProduct(id, request));
     }
 
     @PatchMapping("/{id}/stock")
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER')")
     public ProductResponse adjustStock(@PathVariable UUID id,
             @Valid @RequestBody StockAdjustmentRequest request) {
         return ProductResponse.from(catalogService.adjustStock(id, request));
@@ -63,6 +70,7 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER')")
     public void delete(@PathVariable UUID id) {
         catalogService.deleteProduct(id);
     }

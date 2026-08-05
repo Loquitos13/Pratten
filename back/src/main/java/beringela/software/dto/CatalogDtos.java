@@ -2,10 +2,12 @@ package beringela.software.dto;
 
 import beringela.software.domain.Category;
 import beringela.software.domain.MenuItem;
+import beringela.software.domain.MenuItemIngredient;
 import beringela.software.domain.Product;
 import beringela.software.domain.ProductUnit;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -85,6 +87,31 @@ public final class CatalogDtos {
             return new MenuItemResponse(m.getId(), m.getName(), m.getDescription(),
                     c != null ? c.getId() : null, c != null ? c.getName() : null,
                     m.getPrice(), m.isAvailable());
+        }
+    }
+
+    public record MenuItemIngredientRequest(
+            @NotNull UUID productId,
+            @NotNull @Positive BigDecimal quantityPerServing) {
+    }
+
+    public record MenuItemIngredientResponse(
+            UUID id,
+            UUID menuItemId,
+            UUID productId,
+            String productName,
+            ProductUnit unit,
+            BigDecimal quantityPerServing) {
+
+        public static MenuItemIngredientResponse from(MenuItemIngredient line) {
+            Product product = line.getProduct();
+            return new MenuItemIngredientResponse(
+                    line.getId(),
+                    line.getMenuItem().getId(),
+                    product.getId(),
+                    product.getName(),
+                    product.getUnit(),
+                    line.getQuantityPerServing());
         }
     }
 }

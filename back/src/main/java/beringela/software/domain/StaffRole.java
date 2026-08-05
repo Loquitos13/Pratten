@@ -4,6 +4,5 @@ public enum StaffRole {
     OWNER,
     MANAGER,
     WAITER,
-    KITCHEN,
-    CASHIER
+    KITCHEN
 }

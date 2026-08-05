@@ -1,0 +1,8 @@
+{
+  "name": "Slack Ops",
+  "channelType": "WEBHOOK",
+  "target": "https://hooks.slack.com/services/XXX/YYY/ZZZ",
+  "minSeverity": "WARNING",
+  "eventTypes": "TENANT_OFFLINE,TENANT_DEGRADED,HIGH_LATENCY,SYNC_BACKLOG,TENANT_INACTIVE",
+  "active": true
+}

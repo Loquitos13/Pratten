@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: beringela.software.service.StockServiceTest
+-------------------------------------------------------------------------------
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.880 s -- in beringela.software.service.StockServiceTest

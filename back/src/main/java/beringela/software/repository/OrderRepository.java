@@ -14,4 +14,11 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByStatusOrderByCreatedAtAsc(OrderStatus status);
 
     List<Order> findByCreatedAtBetween(Instant start, Instant end);
+
+    List<Order> findByWaiterIdAndCreatedAtBetweenOrderByCreatedAtDesc(
+            UUID waiterId, Instant start, Instant end);
+
+    boolean existsByWaiterIdAndStatusIn(UUID waiterId, List<OrderStatus> statuses);
+
+    boolean existsByWaiterIdAndStatusInAndTableIdNot(UUID waiterId, List<OrderStatus> statuses, UUID tableId);
 }

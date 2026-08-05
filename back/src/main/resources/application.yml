@@ -20,14 +20,48 @@ server:
   servlet:
     context-path: /api
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
 pratten:
   seed:
     enabled: true
+  platform:
+    bootstrap:
+      enabled: true
+    admin:
+      email: ${PRATTEN_PLATFORM_ADMIN_EMAIL:}
+      password: ${PRATTEN_PLATFORM_ADMIN_PASSWORD:}
+      name: ${PRATTEN_PLATFORM_ADMIN_NAME:Platform Admin}
+    health:
+      offline-threshold-seconds: 120
+      degraded-latency-ms: 2000
+      check-interval-ms: 30000
+  messaging:
+    rabbit:
+      enabled: false
+  redis:
+    enabled: false
   security:
+    cors:
+      # Origens permitidas (browser). Em produção define PRATTEN_CORS_ORIGINS
+      # com os domínios reais, separados por vírgula.
+      allowed-origins: ${PRATTEN_CORS_ORIGINS:http://localhost:*,http://127.0.0.1:*}
     jwt:
       # Override in production via PRATTEN_JWT_SECRET (min. 32 bytes for HS256).
       secret: ${PRATTEN_JWT_SECRET:pratten-dev-secret-change-me-please-0123456789abcdef}
+      issuer: pratten
       expiration-minutes: 480
+    login:
+      # Trava tentativas de login por conta, para conter ataques de força bruta.
+      max-attempts: 5
+      lockout-minutes: 15
 
 ---
 spring:
@@ -49,6 +83,25 @@ spring:
     console:
       enabled: true
       path: /h2-console
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+management:
+  health:
+    rabbit:
+      enabled: false
+    redis:
+      enabled: false
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
 
 ---
 spring:
@@ -56,7 +109,7 @@ spring:
     activate:
       on-profile: prod
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/pratten}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/pratten}
     username: ${DB_USERNAME:pratten}
     password: ${DB_PASSWORD:pratten}
     driver-class-name: org.postgresql.Driver
@@ -67,7 +120,52 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:pratten}
+    password: ${RABBITMQ_PASSWORD:pratten}
+    listener:
+      simple:
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 5
+          multiplier: 2.0
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:pratten}
 
 pratten:
   seed:
+    enabled: false
+  messaging:
+    rabbit:
+      enabled: ${PRATTEN_MESSAGING_RABBIT_ENABLED:true}
+  redis:
+    enabled: ${REDIS_ENABLED:true}
+  platform:
+    alerts:
+      mail:
+        enabled: ${PRATTEN_ALERTS_MAIL_ENABLED:false}
+        from: ${PRATTEN_ALERTS_MAIL_FROM:alerts@pratten.pt}
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
     enabled: false

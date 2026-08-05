@@ -1,0 +1,755 @@
+{
+  "info": {
+    "_postman_id": "pratten-api-collection",
+    "name": "Pratten API",
+    "description": "Collection para testar a API Pratten. Corpos de exemplo em `teste/bodies/`. Importa também `Pratten.local.postman_environment.json`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{staffToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth (staff)",
+      "item": [
+        {
+          "name": "Register restaurant",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurantName\": \"Restaurante Teste\",\n  \"slug\": \"teste-postman\",\n  \"managerName\": \"Gestor Teste\",\n  \"email\": \"gestor@teste-postman.pt\",\n  \"password\": \"teste1234\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Corpo: teste/bodies/auth-register.json"
+          }
+        },
+        {
+          "name": "Login staff (OWNER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('staffToken', json.token);",
+                  "  if (json.user) {",
+                  "    pm.environment.set('tenantId', json.user.tenantId);",
+                  "    pm.environment.set('waiterId', json.user.userId);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"demo\",\n  \"email\": \"ana@demo.pt\",\n  \"password\": \"demo1234\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Corpo: teste/bodies/auth-login-staff.json"
+          }
+        },
+        {
+          "name": "Login staff (WAITER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('staffToken', json.token);",
+                  "  if (json.user) {",
+                  "    pm.environment.set('tenantId', json.user.tenantId);",
+                  "    pm.environment.set('waiterId', json.user.userId);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"demo\",\n  \"email\": \"joao@demo.pt\",\n  \"password\": \"demo1234\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Corpo: teste/bodies/auth-login-waiter.json"
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Platform",
+      "item": [
+        {
+          "name": "Login superadmin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.environment.set('platformToken', pm.response.json().token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@pratten.pt\",\n  \"password\": \"superadmin1234\"\n}"
+            },
+            "url": "{{baseUrl}}/platform/auth/login",
+            "description": "Corpo: teste/bodies/auth-login-platform.json"
+          }
+        },
+        {
+          "name": "Me (superadmin)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/auth/me"
+          }
+        },
+        {
+          "name": "List tenants",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length) pm.environment.set('tenantId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/tenants"
+          }
+        },
+        {
+          "name": "Create tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Restaurante Novo\",\n  \"slug\": \"novo-rest\",\n  \"vatNumber\": \"500000001\",\n  \"address\": \"Av. Teste, Porto\",\n  \"currency\": \"EUR\",\n  \"ownerName\": \"Owner Novo\",\n  \"ownerEmail\": \"owner@novo-rest.pt\",\n  \"ownerPassword\": \"owner12345\"\n}"
+            },
+            "url": "{{baseUrl}}/platform/tenants",
+            "description": "Corpo: teste/bodies/platform-create-tenant.json"
+          }
+        },
+        {
+          "name": "Get tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}"
+          }
+        },
+        {
+          "name": "Update tenant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supportNotes\": \"Cliente em onboarding - contacto via email.\",\n  \"active\": true\n}"
+            },
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}",
+            "description": "Corpo: teste/bodies/platform-update-tenant.json"
+          }
+        },
+        {
+          "name": "Diagnostics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}/diagnostics"
+          }
+        },
+        {
+          "name": "Audit log",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}/audit"
+          }
+        },
+        {
+          "name": "Reset staff password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"novaPassword123\"\n}"
+            },
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}/staff/{{staffId}}/reset-password",
+            "description": "Corpo: teste/bodies/platform-reset-password.json"
+          }
+        },
+        {
+          "name": "Unlock staff login",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}/staff/{{staffId}}/unlock-login"
+          }
+        },
+        {
+          "name": "Start remote session (OWNER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('remoteToken', json.token);",
+                  "  pm.environment.set('remoteSessionId', json.sessionId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Suporte remoto - cliente reportou mesas bloqueadas\",\n  \"durationMinutes\": 60\n}"
+            },
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}/remote-session",
+            "description": "Corpo: teste/bodies/platform-remote-session.json"
+          }
+        },
+        {
+          "name": "Remote session - list tables",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length) pm.environment.set('tableId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{remoteToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/tables"
+          }
+        },
+        {
+          "name": "End remote session",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "url": "{{baseUrl}}/platform/tenants/{{tenantId}}/remote-session/{{remoteSessionId}}/end"
+          }
+        },
+        {
+          "name": "Dashboard",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/dashboard"
+          }
+        },
+        {
+          "name": "Health overview",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/health"
+          }
+        },
+        {
+          "name": "Notifications",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/notifications?unreadOnly=true"
+          }
+        },
+        {
+          "name": "Global audit",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/audit"
+          }
+        },
+        {
+          "name": "List platform admins",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "GET",
+            "url": "{{baseUrl}}/platform/admins"
+          }
+        },
+        {
+          "name": "Create alert channel (webhook)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{platformToken}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Slack Ops\",\n  \"channelType\": \"WEBHOOK\",\n  \"target\": \"https://hooks.slack.com/services/XXX/YYY/ZZZ\",\n  \"minSeverity\": \"WARNING\",\n  \"eventTypes\": \"TENANT_OFFLINE,TENANT_DEGRADED,HIGH_LATENCY\",\n  \"active\": true\n}"
+            },
+            "url": "{{baseUrl}}/platform/alerts/channels",
+            "description": "Corpo: teste/bodies/platform-alert-channel.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tables",
+      "item": [
+        {
+          "name": "List tables",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length) pm.environment.set('tableId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/tables" }
+        },
+        {
+          "name": "Create table",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"10\",\n  \"zone\": \"Salão\",\n  \"seats\": 4\n}"
+            },
+            "url": "{{baseUrl}}/tables",
+            "description": "Corpo: teste/bodies/create-table.json"
+          }
+        },
+        {
+          "name": "Get table",
+          "request": { "method": "GET", "url": "{{baseUrl}}/tables/{{tableId}}" }
+        },
+        {
+          "name": "Set status OCCUPIED",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"OCCUPIED\"\n}" },
+            "url": "{{baseUrl}}/tables/{{tableId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Menu & catalog",
+      "item": [
+        {
+          "name": "List menu items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length) pm.environment.set('menuItemId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/menu-items" }
+        },
+        {
+          "name": "List categories",
+          "request": { "method": "GET", "url": "{{baseUrl}}/categories" }
+        },
+        {
+          "name": "List products",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products" }
+        },
+        {
+          "name": "Low stock products",
+          "request": { "method": "GET", "url": "{{baseUrl}}/products/low-stock" }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "List orders",
+          "request": { "method": "GET", "url": "{{baseUrl}}/orders" }
+        },
+        {
+          "name": "Create order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.environment.set('orderId', pm.response.json().id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tableId\": \"{{tableId}}\",\n  \"waiterId\": \"{{waiterId}}\",\n  \"notes\": \"Pedido via Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/orders",
+            "description": "Corpo: teste/bodies/create-order.json - corre List tables e Login WAITER antes."
+          }
+        },
+        {
+          "name": "Send to kitchen",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/orders/{{orderId}}/send-to-kitchen"
+          }
+        },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const order = pm.response.json();",
+                  "  if (order.items && order.items.length) {",
+                  "    pm.environment.set('orderItemId', order.items[order.items.length - 1].id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"menuItemId\": \"{{menuItemId}}\",\n  \"quantity\": 2,\n  \"notes\": \"Sem sal\"\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/items",
+            "description": "Corpo: teste/bodies/add-order-item.json"
+          }
+        },
+        {
+          "name": "Add payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"method\": \"CASH\",\n  \"amount\": 24.00,\n  \"tip\": 2.00\n}"
+            },
+            "url": "{{baseUrl}}/orders/{{orderId}}/payments",
+            "description": "Corpo: teste/bodies/order-payment.json"
+          }
+        },
+        {
+          "name": "Close order (PAID)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"PAID\"\n}" },
+            "url": "{{baseUrl}}/orders/{{orderId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kitchen",
+      "item": [
+        {
+          "name": "Queue",
+          "request": { "method": "GET", "url": "{{baseUrl}}/kitchen/queue" }
+        },
+        {
+          "name": "Item PREPARING",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"PREPARING\"\n}" },
+            "url": "{{baseUrl}}/kitchen/items/{{orderItemId}}/status"
+          }
+        },
+        {
+          "name": "Item READY",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"READY\"\n}" },
+            "url": "{{baseUrl}}/kitchen/items/{{orderItemId}}/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shifts",
+      "item": [
+        {
+          "name": "Clock in",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Início do turno - sem incidentes.\"\n}"
+            },
+            "url": "{{baseUrl}}/shifts/clock-in",
+            "description": "Corpo: teste/bodies/shift-clock-in.json"
+          }
+        },
+        {
+          "name": "My shift",
+          "request": { "method": "GET", "url": "{{baseUrl}}/shifts/me" }
+        },
+        {
+          "name": "Clock out",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Fim do turno - entrega feita.\"\n}"
+            },
+            "url": "{{baseUrl}}/shifts/clock-out",
+            "description": "Corpo: teste/bodies/shift-clock-out.json"
+          }
+        },
+        {
+          "name": "Active shifts",
+          "request": { "method": "GET", "url": "{{baseUrl}}/shifts/active" }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Waiters summary",
+          "request": { "method": "GET", "url": "{{baseUrl}}/reports/waiters" }
+        },
+        {
+          "name": "Waiter activity",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/reports/waiters/{{waiterId}}/activity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "List staff",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const list = pm.response.json();",
+                  "  if (list.length) pm.environment.set('staffId', list[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": { "method": "GET", "url": "{{baseUrl}}/staff" }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "List reservations",
+          "request": { "method": "GET", "url": "{{baseUrl}}/reservations" }
+        }
+      ]
+    },
+    {
+      "name": "Public (website)",
+      "item": [
+        {
+          "name": "Menu",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-ID", "value": "{{demoSlug}}" }],
+            "url": "{{baseUrl}}/public/menu"
+          }
+        },
+        {
+          "name": "Availability",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-ID", "value": "{{demoSlug}}" }],
+            "url": "{{baseUrl}}/public/availability"
+          }
+        },
+        {
+          "name": "Book reservation",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Tenant-ID", "value": "{{demoSlug}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Cliente Postman\",\n  \"customerEmail\": \"cliente@exemplo.pt\",\n  \"customerPhone\": \"+351912345678\",\n  \"partySize\": 4,\n  \"reservedAt\": \"2026-08-10T20:00:00Z\",\n  \"notes\": \"Mesa perto da janela\"\n}"
+            },
+            "url": "{{baseUrl}}/public/reservations",
+            "description": "Corpo: teste/bodies/public-reservation.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sync",
+      "item": [
+        {
+          "name": "SSE stream",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "text/event-stream" }],
+            "url": "{{baseUrl}}/sync/stream"
+          }
+        }
+      ]
+    }
+  ]
+}

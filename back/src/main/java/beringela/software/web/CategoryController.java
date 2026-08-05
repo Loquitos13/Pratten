@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,23 +29,27 @@ public class CategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER','WAITER')")
     public List<CategoryResponse> list() {
         return catalogService.findCategories().stream().map(CategoryResponse::from).toList();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER')")
     public CategoryResponse create(@Valid @RequestBody CategoryRequest request) {
         return CategoryResponse.from(catalogService.createCategory(request));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER')")
     public CategoryResponse update(@PathVariable UUID id, @Valid @RequestBody CategoryRequest request) {
         return CategoryResponse.from(catalogService.updateCategory(id, request));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyRole('OWNER','MANAGER')")
     public void delete(@PathVariable UUID id) {
         catalogService.deleteCategory(id);
     }

@@ -7,12 +7,16 @@ import beringela.software.dto.AuthDtos.AuthResponse;
 import beringela.software.dto.AuthDtos.LoginRequest;
 import beringela.software.dto.AuthDtos.MeResponse;
 import beringela.software.dto.AuthDtos.RegisterRequest;
+import beringela.software.common.TooManyAttemptsException;
 import beringela.software.dto.TenantDtos.CreateTenantRequest;
 import beringela.software.repository.TenantRepository;
 import beringela.software.security.AuthPrincipal;
 import beringela.software.security.JwtService;
+import beringela.software.security.LoginAttemptService;
 import beringela.software.tenant.TenantSessionExecutor;
 import java.time.Instant;
+import java.util.Locale;
+import java.util.UUID;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,14 +34,21 @@ public class AuthService {
     private final TenantSessionExecutor tenantSessions;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginAttemptService loginAttempts;
+
+    /** Hash válido usado para igualar o tempo quando a conta não existe. */
+    private final String dummyHash;
 
     public AuthService(TenantService tenantService, TenantRepository tenantRepository,
-            TenantSessionExecutor tenantSessions, PasswordEncoder passwordEncoder, JwtService jwtService) {
+            TenantSessionExecutor tenantSessions, PasswordEncoder passwordEncoder,
+            JwtService jwtService, LoginAttemptService loginAttempts) {
         this.tenantService = tenantService;
         this.tenantRepository = tenantRepository;
         this.tenantSessions = tenantSessions;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.loginAttempts = loginAttempts;
+        this.dummyHash = passwordEncoder.encode(UUID.randomUUID().toString());
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -57,11 +68,17 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        String key = attemptKey(request);
+        if (loginAttempts.isBlocked(key)) {
+            throw new TooManyAttemptsException(
+                    "Demasiadas tentativas. Tenta novamente mais tarde.");
+        }
+
         Tenant tenant = tenantRepository.findBySlug(request.slug())
                 .filter(Tenant::isActive)
-                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
+                .orElse(null);
 
-        StaffMember user = tenantSessions.inTenant(tenant.getId(), session ->
+        StaffMember user = tenant == null ? null : tenantSessions.inTenant(tenant.getId(), session ->
                 session.createQuery(
                                 "select s from StaffMember s where lower(s.email) = lower(:email)",
                                 StaffMember.class)
@@ -70,20 +87,35 @@ public class AuthService {
                         .findFirst()
                         .orElse(null));
 
-        if (user == null || !user.isActive()
-                || user.getPasswordHash() == null
-                || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        boolean valid = user != null && user.isActive() && user.getPasswordHash() != null
+                && passwordEncoder.matches(request.password(), user.getPasswordHash());
+
+        if (!valid) {
+            // Corre sempre um bcrypt para não revelar por tempo se a conta existe.
+            if (user == null || user.getPasswordHash() == null) {
+                passwordEncoder.matches(request.password(), dummyHash);
+            }
+            loginAttempts.recordFailure(key);
             throw new BadCredentialsException("Invalid credentials");
         }
+
+        loginAttempts.reset(key);
         return buildResponse(user, tenant);
+    }
+
+    private String attemptKey(LoginRequest request) {
+        return (request.slug() + ':' + request.email()).toLowerCase(Locale.ROOT);
     }
 
     public MeResponse me(AuthPrincipal principal) {
         Tenant tenant = tenantService.get(principal.tenantId());
         StaffMember user = tenantSessions.inTenant(tenant.getId(), session ->
                 session.find(StaffMember.class, principal.userId()));
-        if (user == null) {
+        if (user == null || !user.isActive()) {
             throw new BadCredentialsException("Unknown user");
+        }
+        if (!tenant.isActive()) {
+            throw new BadCredentialsException("Restaurant inactive");
         }
         return MeResponse.from(user, tenant);
     }

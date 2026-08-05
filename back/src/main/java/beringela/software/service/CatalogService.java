@@ -11,8 +11,11 @@ import beringela.software.dto.CatalogDtos.StockAdjustmentRequest;
 import beringela.software.repository.CategoryRepository;
 import beringela.software.repository.MenuItemRepository;
 import beringela.software.repository.ProductRepository;
+import beringela.software.sync.SyncEventType;
+import beringela.software.sync.SyncService;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,12 +28,14 @@ public class CatalogService {
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final MenuItemRepository menuItemRepository;
+    private final SyncService syncService;
 
     public CatalogService(CategoryRepository categoryRepository, ProductRepository productRepository,
-            MenuItemRepository menuItemRepository) {
+            MenuItemRepository menuItemRepository, SyncService syncService) {
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
         this.menuItemRepository = menuItemRepository;
+        this.syncService = syncService;
     }
 
     // ---- Categories ----
@@ -41,15 +46,21 @@ public class CatalogService {
     }
 
     public Category createCategory(CategoryRequest request) {
-        return saveCategory(new Category(), request);
+        Category saved = saveCategory(new Category(), request);
+        publishCatalog("category", saved.getId());
+        return saved;
     }
 
     public Category updateCategory(UUID id, CategoryRequest request) {
-        return saveCategory(getCategory(id), request);
+        Category saved = saveCategory(getCategory(id), request);
+        publishCatalog("category", saved.getId());
+        return saved;
     }
 
     public void deleteCategory(UUID id) {
-        categoryRepository.delete(getCategory(id));
+        Category category = getCategory(id);
+        categoryRepository.delete(category);
+        publishCatalog("category", category.getId());
     }
 
     public Category getCategory(UUID id) {
@@ -82,22 +93,30 @@ public class CatalogService {
     }
 
     public Product createProduct(ProductRequest request) {
-        return saveProduct(new Product(), request);
+        Product saved = saveProduct(new Product(), request);
+        publishCatalog("product", saved.getId());
+        return saved;
     }
 
     public Product updateProduct(UUID id, ProductRequest request) {
-        return saveProduct(getProduct(id), request);
+        Product saved = saveProduct(getProduct(id), request);
+        publishCatalog("product", saved.getId());
+        return saved;
     }
 
     public void deleteProduct(UUID id) {
-        productRepository.delete(getProduct(id));
+        Product product = getProduct(id);
+        productRepository.delete(product);
+        publishCatalog("product", product.getId());
     }
 
     public Product adjustStock(UUID id, StockAdjustmentRequest request) {
         Product product = getProduct(id);
         BigDecimal updated = product.getQuantity().add(request.delta());
         product.setQuantity(updated.max(BigDecimal.ZERO));
-        return productRepository.save(product);
+        Product saved = productRepository.save(product);
+        publishCatalog("product", saved.getId());
+        return saved;
     }
 
     private Product saveProduct(Product product, ProductRequest request) {
@@ -129,15 +148,21 @@ public class CatalogService {
     }
 
     public MenuItem createMenuItem(MenuItemRequest request) {
-        return saveMenuItem(new MenuItem(), request);
+        MenuItem saved = saveMenuItem(new MenuItem(), request);
+        publishCatalog("menuItem", saved.getId());
+        return saved;
     }
 
     public MenuItem updateMenuItem(UUID id, MenuItemRequest request) {
-        return saveMenuItem(getMenuItem(id), request);
+        MenuItem saved = saveMenuItem(getMenuItem(id), request);
+        publishCatalog("menuItem", saved.getId());
+        return saved;
     }
 
     public void deleteMenuItem(UUID id) {
-        menuItemRepository.delete(getMenuItem(id));
+        MenuItem item = getMenuItem(id);
+        menuItemRepository.delete(item);
+        publishCatalog("menuItem", item.getId());
     }
 
     private MenuItem saveMenuItem(MenuItem item, MenuItemRequest request) {
@@ -149,5 +174,9 @@ public class CatalogService {
             item.setAvailable(request.available());
         }
         return menuItemRepository.save(item);
+    }
+
+    private void publishCatalog(String entity, UUID id) {
+        syncService.publish(SyncEventType.CATALOG_UPDATED, Map.of("entity", entity, "id", id));
     }
 }

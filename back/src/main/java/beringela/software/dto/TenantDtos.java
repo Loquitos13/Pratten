@@ -33,4 +33,22 @@ public final class TenantDtos {
                     t.getVatNumber(), t.getAddress(), t.getCurrency(), t.isActive());
         }
     }
+
+    /** Vista completa para superadmin (inclui notas de suporte). */
+    public record PlatformTenantResponse(
+            UUID id,
+            String name,
+            String slug,
+            String vatNumber,
+            String address,
+            String currency,
+            boolean active,
+            String supportNotes) {
+
+        public static PlatformTenantResponse from(Tenant t) {
+            return new PlatformTenantResponse(t.getId(), t.getName(), t.getSlug(),
+                    t.getVatNumber(), t.getAddress(), t.getCurrency(),
+                    t.isActive(), t.getSupportNotes());
+        }
+    }
 }

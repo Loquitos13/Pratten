@@ -111,7 +111,9 @@ public final class OrderDtos {
     public record KitchenTicketResponse(
             UUID orderItemId,
             UUID orderId,
+            UUID tableId,
             String tableNumber,
+            String tableZone,
             String name,
             int quantity,
             String notes,
@@ -119,11 +121,15 @@ public final class OrderDtos {
             Instant createdAt) {
 
         public static KitchenTicketResponse from(OrderItem i) {
-            String tableNumber = i.getOrder() != null && i.getOrder().getTable() != null
-                    ? i.getOrder().getTable().getNumber() : null;
-            return new KitchenTicketResponse(i.getId(),
-                    i.getOrder() != null ? i.getOrder().getId() : null,
-                    tableNumber, i.getName(), i.getQuantity(), i.getNotes(),
+            var order = i.getOrder();
+            var table = order != null ? order.getTable() : null;
+            return new KitchenTicketResponse(
+                    i.getId(),
+                    order != null ? order.getId() : null,
+                    table != null ? table.getId() : null,
+                    table != null ? table.getNumber() : null,
+                    table != null ? table.getZone() : null,
+                    i.getName(), i.getQuantity(), i.getNotes(),
                     i.getStatus(), i.getCreatedAt());
         }
     }
